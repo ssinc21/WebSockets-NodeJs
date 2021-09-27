@@ -4,53 +4,49 @@ const urlSearch = new URLSearchParams(window.location.search);
 const username = urlSearch.get('username');
 const room = urlSearch.get('select_room');
 
-socket.emit('select_room', {
+// Emit => emitir alguma info
+// On => escutar alguma info
+
+
+const usernameDiv = document.getElementById("username");
+usernameDiv.innerHTML = `Olá, ${username}!`
+
+socket.emit("select_room", {
     username,
     room
-}, (messages) => {
-    messages.forEach(message => createMessage(message));
-});
-
-document.querySelector('header > h1').innerHTML = room.charAt(0).toUpperCase() + room.slice(1);;
-document.querySelector('div.user > p').innerHTML = username;
-
-function sendMessage() {
-    const message = document.getElementById('message_field').value;
-    document.getElementById('message_field').value = '';
-
-    const data = {
-        room,
-        message,
-        username
+},
+    (response) => {
+        response.forEach(response => createMessage(response))
     }
+);
 
-    socket.emit('message', data);
-}
+document.getElementById("message_field").addEventListener("keypress", (event) => {
+    if (event.key === 'Enter') {
+        const message = event.target.value;
 
-document.getElementById('message_field').addEventListener('keypress', () => {
-    if (event.key === 'Enter') { sendMessage(); }
-});
+        const data = {
+            room,
+            message,
+            username
+        }
 
-document.querySelector('i.fa-paper-plane').addEventListener('click', () => {
-    sendMessage();
-});
+        socket.emit("message", data);
+        event.target.value = "";
+    }
+})
 
-socket.on('message', (data) => {
+socket.on("message", data => {
     createMessage(data);
-});
+})
 
 function createMessage(data) {
-    const article = document.querySelector('article');
+    const messageDiv = document.getElementById("messages");
 
-    article.innerHTML += `
-        <div class="messages ${data.username === username ? 'you' : 'other'}">
-            <img src="https://thispersondoesnotexist.com/image" class="profile-pic"/>
-            <div class="message">
-                <p>${data.text}</p>
-            </div>
-        </div>
+    messageDiv.innerHTML += `
+    <div class = "new_message">
+    <label class = "form=label">
+        <strong>${data.username}: </strong> <span> ${data.text} - ${dayjs(data.createdAt).format("DD/MM HH:mm")} </span>
+    </label>
+    </div>
     `;
 }
-document.querySelector('i.fa-sign-out-alt').addEventListener('click', () => {
-    window.location.href = 'index.html';
-})
